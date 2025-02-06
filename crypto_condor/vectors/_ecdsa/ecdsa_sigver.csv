@@ -1,0 +1,11 @@
+,SHA-224,SHA-256,SHA-384,SHA-512,SHA-512/224,SHA-512/256,SHA3-224,SHA3-256,SHA3-384,SHA3-512
+P-224,:green:`C` + :blue:`R`,:green:`C` + :blue:`R`,:green:`C`,:green:`C` + :blue:`R`,:green:`C`,:green:`C`,:blue:`R`,:blue:`R`,x,:blue:`R`
+P-256,:green:`C`,:green:`C` + :blue:`R`,:green:`C`,:green:`C` + :blue:`R`,:green:`C`,:green:`C`,x,:blue:`R`,x,:blue:`R`
+P-384,:green:`C`,:green:`C`,:green:`C` + :blue:`R`,:green:`C` + :blue:`R`,:green:`C`,:green:`C`,x,x,:blue:`R`,:blue:`R`
+P-521,:green:`C`,:green:`C`,:green:`C`,:green:`C` + :blue:`R`,:green:`C`,:green:`C`,x,x,x,:blue:`R`
+B-283,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x,x,x,x,x
+B-409,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x,x,x,x,x
+B-571,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x,x,x,x,x
+secp256k1,x,:blue:`R`,x,:blue:`R`,x,x,x,:blue:`R`,x,:blue:`R`
+brainpoolP256r1,x,:blue:`R`,x,x,x,x,x,x,x,x
+brainpoolP384r1,x,x,:blue:`R`,x,x,x,x,x,x,x

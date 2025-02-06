@@ -1,0 +1,332 @@
+{
+  "siggen": {
+    "P-224": {
+      "SHA-224": [
+        "cavp-siggen-P-224-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-P-224-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-P-224-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-P-224-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-siggen-P-224-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-siggen-P-224-SHA-512_256.pb2"
+      ]
+    },
+    "P-256": {
+      "SHA-224": [
+        "cavp-siggen-P-256-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-P-256-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-P-256-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-P-256-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-siggen-P-256-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-siggen-P-256-SHA-512_256.pb2"
+      ]
+    },
+    "P-384": {
+      "SHA-224": [
+        "cavp-siggen-P-384-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-P-384-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-P-384-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-P-384-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-siggen-P-384-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-siggen-P-384-SHA-512_256.pb2"
+      ]
+    },
+    "P-521": {
+      "SHA-224": [
+        "cavp-siggen-P-521-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-P-521-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-P-521-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-P-521-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-siggen-P-521-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-siggen-P-521-SHA-512_256.pb2"
+      ]
+    },
+    "B-283": {
+      "SHA-224": [
+        "cavp-siggen-B-283-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-B-283-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-B-283-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-B-283-SHA-512.pb2"
+      ]
+    },
+    "B-409": {
+      "SHA-224": [
+        "cavp-siggen-B-409-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-B-409-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-B-409-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-B-409-SHA-512.pb2"
+      ]
+    },
+    "B-571": {
+      "SHA-224": [
+        "cavp-siggen-B-571-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-siggen-B-571-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-siggen-B-571-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-siggen-B-571-SHA-512.pb2"
+      ]
+    }
+  },
+  "sigver": {
+    "P-224": {
+      "SHA-1": [
+        "cavp-sigver-P-224-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-P-224-SHA-224.pb2",
+        "wycheproof-sigver-P-224-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-P-224-SHA-256.pb2",
+        "wycheproof-sigver-P-224-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-P-224-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-P-224-SHA-512.pb2",
+        "wycheproof-sigver-P-224-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-sigver-P-224-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-sigver-P-224-SHA-512_256.pb2"
+      ],
+      "SHA3-256": [
+        "wycheproof-sigver-P-224-SHA3-256.pb2"
+      ],
+      "SHA3-512": [
+        "wycheproof-sigver-P-224-SHA3-512.pb2"
+      ],
+      "SHA3-224": [
+        "wycheproof-sigver-P-224-SHA3-224.pb2"
+      ]
+    },
+    "P-256": {
+      "SHA-1": [
+        "cavp-sigver-P-256-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-P-256-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-P-256-SHA-256.pb2",
+        "wycheproof-sigver-P-256-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-P-256-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-P-256-SHA-512.pb2",
+        "wycheproof-sigver-P-256-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-sigver-P-256-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-sigver-P-256-SHA-512_256.pb2"
+      ],
+      "SHA3-256": [
+        "wycheproof-sigver-P-256-SHA3-256.pb2"
+      ],
+      "SHA3-512": [
+        "wycheproof-sigver-P-256-SHA3-512.pb2"
+      ]
+    },
+    "P-384": {
+      "SHA-1": [
+        "cavp-sigver-P-384-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-P-384-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-P-384-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-P-384-SHA-384.pb2",
+        "wycheproof-sigver-P-384-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-P-384-SHA-512.pb2",
+        "wycheproof-sigver-P-384-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-sigver-P-384-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-sigver-P-384-SHA-512_256.pb2"
+      ],
+      "SHA3-384": [
+        "wycheproof-sigver-P-384-SHA3-384.pb2"
+      ],
+      "SHA3-512": [
+        "wycheproof-sigver-P-384-SHA3-512.pb2"
+      ]
+    },
+    "P-521": {
+      "SHA-1": [
+        "cavp-sigver-P-521-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-P-521-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-P-521-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-P-521-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-P-521-SHA-512.pb2",
+        "wycheproof-sigver-P-521-SHA-512.pb2"
+      ],
+      "SHA-512/224": [
+        "cavp-sigver-P-521-SHA-512_224.pb2"
+      ],
+      "SHA-512/256": [
+        "cavp-sigver-P-521-SHA-512_256.pb2"
+      ],
+      "SHA3-512": [
+        "wycheproof-sigver-P-521-SHA3-512.pb2"
+      ]
+    },
+    "B-283": {
+      "SHA-1": [
+        "cavp-sigver-B-283-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-B-283-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-B-283-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-B-283-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-B-283-SHA-512.pb2"
+      ]
+    },
+    "B-409": {
+      "SHA-1": [
+        "cavp-sigver-B-409-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-B-409-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-B-409-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-B-409-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-B-409-SHA-512.pb2"
+      ]
+    },
+    "B-571": {
+      "SHA-1": [
+        "cavp-sigver-B-571-SHA-1.pb2"
+      ],
+      "SHA-224": [
+        "cavp-sigver-B-571-SHA-224.pb2"
+      ],
+      "SHA-256": [
+        "cavp-sigver-B-571-SHA-256.pb2"
+      ],
+      "SHA-384": [
+        "cavp-sigver-B-571-SHA-384.pb2"
+      ],
+      "SHA-512": [
+        "cavp-sigver-B-571-SHA-512.pb2"
+      ]
+    },
+    "brainpoolP256r1": {
+      "SHA-256": [
+        "wycheproof-sigver-brainpoolP256r1-SHA-256.pb2"
+      ]
+    },
+    "secp256k1": {
+      "SHA-256": [
+        "wycheproof-sigver-secp256k1-SHA-256.pb2"
+      ],
+      "SHA3-256": [
+        "wycheproof-sigver-secp256k1-SHA3-256.pb2"
+      ],
+      "SHA3-512": [
+        "wycheproof-sigver-secp256k1-SHA3-512.pb2"
+      ],
+      "SHA-512": [
+        "wycheproof-sigver-secp256k1-SHA-512.pb2"
+      ]
+    },
+    "brainpoolP384r1": {
+      "SHA-384": [
+        "wycheproof-sigver-brainpoolP384r1-SHA-384.pb2"
+      ]
+    },
+    "brainpoolP512r1": {
+      "SHA-512": [
+        "wycheproof-sigver-brainpoolP512r1-SHA-512.pb2"
+      ]
+    }
+  }
+}

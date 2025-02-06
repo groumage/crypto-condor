@@ -1,0 +1,8 @@
+,SHA-224,SHA-256,SHA-384,SHA-512,SHA-512/224,SHA-512/256
+P-224,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`
+P-256,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`
+P-384,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`
+P-521,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`,:green:`C`
+B-283,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x
+B-409,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x
+B-571,:green:`C`,:green:`C`,:green:`C`,:green:`C`,x,x

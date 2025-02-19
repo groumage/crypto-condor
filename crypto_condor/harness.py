@@ -109,19 +109,19 @@ def test_harness(
     Example:
         The simplest usage is to pass the path to the shared library.
 
-        >>> from crypto_condor import shared_library
+        >>> from crypto_condor import harness
         >>> from pathlib import Path
         >>> my_lib = Path("libtest.so")
-        >>> results = shared_library.test_lib(my_lib)
+        >>> results = harness.test_lib(my_lib)
 
         This tests *all* CC functions found. Sometimes it may be useful to limit which
         functions are tested, e.g. when testing one primitive with several parameters.
         We can use the ``included`` and ``excluded`` arguments:
 
         >>> # To only test CC_SHA_256_digest
-        >>> results = shared_library.test_lib(my_lib, included=["CC_SHA_256_digest"])
+        >>> results = harness.test_lib(my_lib, included=["CC_SHA_256_digest"])
         >>> # To test all functions *except* CC_SHA_256_digest
-        >>> results = shared_library.test_lib(my_lib, excluded=["CC_SHA_256_digest"])
+        >>> results = harness.test_lib(my_lib, excluded=["CC_SHA_256_digest"])
     """
     if not harness.is_file():
         raise FileNotFoundError(f"No shared library named {str(harness)} found")

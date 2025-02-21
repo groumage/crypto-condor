@@ -119,8 +119,12 @@ def parse_cavp_sigver(filename: str) -> None:
                 case "Msg":
                     test.msg = bytes.fromhex(value)
                 case "Qx":
+                    if len(value) % 2 == 1:
+                        value = "0" + value
                     qx = value
                 case "Qy":
+                    if len(value) % 2 == 1:
+                        value = "0" + value
                     qy = value
                 case "R":
                     r = int(value, 16)

@@ -1,5 +1,7 @@
 """Utils for ECDSA tests."""
 
+# mypy: ignore-errors
+
 import random
 
 from crypto_condor.primitives import ECDSA

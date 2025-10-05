@@ -241,6 +241,7 @@ def _load_vectors(
         return vectors
 
     # This list may not exist, in which case we will return an empty vectors list.
+    _vec: EcdsaSigVerVectors | EcdsaSigGenVectors
     for filename in algos.get(str(algo), {}):
         vectors_file = vectors_dir / "pb2" / filename
         if vector_type == VectorType.SIGGEN:
@@ -253,9 +254,9 @@ def _load_vectors(
         except Exception:
             logger.exception("Failed to load ECDSA vectors from %s", str(filename))
         if _vec.compliance and compliance:
-            vectors.append(_vec)
+            vectors.append(_vec)  # type: ignore
         if not _vec.compliance and resilience:
-            vectors.append(_vec)
+            vectors.append(_vec)  # type: ignore
 
     # Notify if no vectors have been loaded.
     if not vectors:
@@ -641,7 +642,7 @@ def test_verify(
         rd.add(results, extra_values=[vectors.source])
 
         desc = rf"\[{curve}]\[{hash_function}]\[{vectors.source}] Test verifying"
-        for test in track(vectors.tests, desc):
+        for test in track(vectors.tests, desc):  # type: ignore
             # TODO: handle acceptable tests, decide which should be accepted or not.
             if test.type == TestType.ACCEPTABLE:
                 continue
@@ -782,7 +783,7 @@ def test_sign(
         rd.add(results)
 
         desc = rf"\[{curve}]\[{hash_function}]\[{vectors.source}] Test signing"
-        for test in track(vectors.tests, desc):
+        for test in track(vectors.tests, desc):  # type: ignore
             key = _encode_key(key_encoding, curve, test.d)
             if pre_hashed:
                 digest = hashes.Hash(hash_function.get_hash_instance())
@@ -932,7 +933,7 @@ def test_sign_verify_invariant(
         rd.add(results)
 
         desc = rf"\[{curve}]\[{hash_function}]\[{vectors.source}] Test sign-verify"
-        for test in track(vectors.tests, desc):
+        for test in track(vectors.tests, desc):  # type: ignore
             # NOTE: for now, skipping all invalid test vectors. In practice we could use
             # those that modify the resulting signature, since we do not use that value
             # for this test. However, those are mostly Wycheproof vectors that use the

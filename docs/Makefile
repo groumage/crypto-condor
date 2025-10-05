@@ -41,4 +41,5 @@ livehtml:
 		--watch ../tests \
 		--ignore *.dat \
 		--ignore *.pb2 \
-		--ignore **/guides/*.md
+		--ignore **/guides/*.md \
+		--ignore *.so

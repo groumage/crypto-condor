@@ -40,4 +40,5 @@ livehtml:
 		--watch ../crypto_condor \
 		--watch ../tests \
 		--ignore *.dat \
-		--ignore *.pb2
+		--ignore *.pb2 \
+		--ignore **/guides/*.md

@@ -6,10 +6,8 @@ from typing import Annotated, Optional
 
 import strenum
 import typer
-from rich.prompt import Prompt
 
 from crypto_condor.primitives import (
-    ECDSA,
     MLDSA,
     MLKEM,
     RSAES,
@@ -154,59 +152,9 @@ Example:
 @app.command(name="ECDSA", no_args_is_help=True, help=_ecdsa_help)
 @app.command(name="ecdsa", no_args_is_help=True, help=_ecdsa_help, hidden=True)
 def ecdsa(
-    language: Annotated[ECDSA.Wrapper, _language],
-    curve: Annotated[
-        ECDSA.Curve,
-        typer.Argument(
-            help="The elliptic curve to use.", show_default=False, case_sensitive=False
-        ),
-    ],
-    hash_function: Annotated[
-        ECDSA.Hash,
-        typer.Argument(
-            help="The hash function to use.", show_default=False, case_sensitive=False
-        ),
-    ],
-    key_encoding: Annotated[
-        Optional[ECDSA.KeyEncoding],
-        typer.Option(
-            "--key-encoding",
-            help=(
-                "The encoding used for private keys."
-                " Required when testing the signing function."
-            ),
-            case_sensitive=False,
-        ),
-    ] = None,
-    pubkey_encoding: Annotated[
-        Optional[ECDSA.PubKeyEncoding],
-        typer.Option(
-            "--pubkey-encoding",
-            help=(
-                "The encoding used for public keys."
-                " Required when testing the verifying function."
-            ),
-            case_sensitive=False,
-        ),
-    ] = None,
-    pre_hashed: Annotated[
-        bool,
-        typer.Option(
-            "--pre-hashed",
-            help="Whether the message should be hashed before passing to the function.",
-        ),
-    ] = False,
+    wrapper: Annotated[str, typer.Argument(metavar="FILE")],
     compliance: Annotated[bool, _compliance] = True,
     resilience: Annotated[bool, _resilience] = False,
-    test_sign: Annotated[bool, _sign] = True,
-    test_verify: Annotated[bool, _verify] = True,
-    test_sign_then_verify: Annotated[
-        bool,
-        typer.Option(
-            "--sign-then-verify/--no-sign-then-verify",
-            help="Test both functions by signing then verifying the signature.",
-        ),
-    ] = False,
     filename: Annotated[str, _filename] = "",
     no_save: Annotated[bool, _no_save] = False,
     debug: Annotated[Optional[bool], _debug] = None,
@@ -214,85 +162,29 @@ def ecdsa(
     """Runs an ECDSA wrapper.
 
     Args:
-        language: The language of the wrapper.
-        curve: The elliptic curve to use.
-        hash_function: The hash function to use.
-        key_encoding: The encoding used for private keys.
-        pubkey_encoding: The encoding used for public keys.
-        pre_hashed: Whether the messages given to the implementation must be hashed
-            first.
-        compliance: Whether to use compliance test vectors.
-        resilience: Whether to use resilience test vectors.
-        test_sign: Whether to test the signing function.
-        test_verify: Whether to test the verifying function.
-        test_sign_then_verify: Whether to test both functions by signing then verifying.
-        filename: Name of the file to save results.
-        no_save: Do not save results or prompt the user.
-        debug: When saving the results to a file, whether to add the debug data.
+        wrapper:
+            The wrapper to test.
 
-    Notes:
-        - :attr:`compliance` and :attr:`resilience` should not be False at the same time
-          unless :attr:`test_sign_then_verify` is used.
-        - :attr:`test_sign`, :attr:`test_verify`, and :attr:`test_sign_then_verify`
-          should not be False at the same time.
+    Keyword Args:
+        compliance:
+            Whether to use compliance test vectors.
+        resilience:
+            Whether to use resilience test vectors.
+        filename:
+            Name of the file to save results.
+        no_save:
+            If True, results are not saved and the user is not prompted.
+        debug:
+            When saving the results to a file, whether to add the debug data.
     """
-    if (
-        not test_verify and not test_sign and not test_sign_then_verify
-    ):  # pragma: no cover(not needed)
-        console.print(
-            "--no-verify, --no-sign, and --no-sign-then-verify used: no tests selected"
-        )
-        raise typer.Exit(1)
-    if not compliance and not resilience:  # pragma: no cover (not needed)
-        if test_sign:
-            console.print(
-                "--no-compliance and --no-resilience used with --sign:",
-                "no test vectors to use",
-            )
-            raise typer.Exit(1)
-        if test_verify:
-            console.print(
-                "--no-compliance and --no-resilience used with --verify:",
-                "no test vectors to use",
-            )
-            raise typer.Exit(1)
+    file = Path(wrapper)
+    if not file.is_file():
+        raise FileNotFoundError(f"ECDSA wrapper not found: {wrapper}")
 
-    while (
-        test_sign or test_sign_then_verify
-    ) and not key_encoding:  # pragma: no cover (prompt)
-        key_encoding = ECDSA.KeyEncoding(
-            Prompt.ask(
-                "Select a private key encoding",
-                choices=[str(e) for e in ECDSA.KeyEncoding],
-            )
-        )
-    while (
-        test_verify or test_sign_then_verify
-    ) and not pubkey_encoding:  # pragma: no cover (prompt)
-        pubkey_encoding = ECDSA.PubKeyEncoding(
-            Prompt.ask(
-                "Select a public key encoding",
-                choices=[e for e in ECDSA.PubKeyEncoding],
-            )
-        )
+    from crypto_condor.primitives import ECDSA
 
-    try:
-        results = ECDSA.run_wrapper(
-            language,
-            curve,
-            hash_function,
-            pre_hashed,
-            test_sign,
-            key_encoding,
-            test_verify,
-            pubkey_encoding,
-            test_sign_then_verify,
-            compliance,
-            resilience,
-        )
-    except FileNotFoundError as error:
-        logger.error(error)
-        raise typer.Exit(1) from error
+    results = ECDSA.test_harness(file, compliance, resilience)
+
     if console.process_results(results, filename, no_save, debug):
         raise typer.Exit(0)
     else:
@@ -834,6 +726,7 @@ def ed25519(
         raise typer.Exit(0)
     else:
         raise typer.Exit(1)
+
 
 # TODO: expand.
 _x25519_help = "Run an x25519 wrapper."

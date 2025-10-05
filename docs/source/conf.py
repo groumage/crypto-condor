@@ -47,10 +47,13 @@ rst_prolog = """
 
    <style> .red {color:red} </style>
    <style> .green {color:green} </style>
+   <style> .blue {color:blue} </style>
 
 .. role:: red
 
 .. role:: green
+
+.. role:: blue
 
 .. |cc| replace:: crypto-condor
 

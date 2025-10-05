@@ -33,6 +33,7 @@ Supported primitives
 
     AES <AES>
     ChaCha20
+    ECDSA
     ECDH <ECDH>
     HMAC <HMAC>
     HQC <HQC>

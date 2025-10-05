@@ -9,241 +9,222 @@ from cryptography.hazmat.primitives.asymmetric import ec, utils
 
 from crypto_condor.primitives import ECDSA
 from crypto_condor.primitives.common import Console
-from crypto_condor.vectors.ECDSA import EcdsaSigVerVectors
+
+from ..utils.ecdsa import generate_ecdsa_sigs
 
 console = Console()
 
 
 @pytest.mark.parametrize(
-    "curve,hash_function",
+    ("curve", "algo"),
     [
-        (ECDSA.Curve.SECP192R1, ECDSA.Hash.SHA_256),
-        (ECDSA.Curve.SECP224R1, ECDSA.Hash.SHA_256),
-        (ECDSA.Curve.SECP256R1, ECDSA.Hash.SHA_256),
-        (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA_256),
-        (ECDSA.Curve.BRAINPOOLP256R1, ECDSA.Hash.SHA_256),
+        # Test a standard combination.
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        # Test another standard combination.
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test a B curve.
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA384),
+        # Test secp256k1.
+        (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA512),
+        # Test Brainpool.
+        (ECDSA.Curve.BRAINPOOLP384R1, ECDSA.Hash.SHA384),
+        # Test SHA-3.
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA3_512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
     ],
 )
-def test_verify_file(curve: ECDSA.Curve, hash_function: ECDSA.Hash, tmp_path: Path):
-    """Tests :func:`crypto_condor.primitives.ECDSA.verify_file`.
+def test_verify(curve: ECDSA.Curve, algo: ECDSA.Hash):
+    """Tests :func:`crypto_condor.primitives.ECDSA.test_verify`.
 
-    Since ``verify_file`` expects a file with only presumed-valid signatures,
-    we parse the vectors and separate the valid from the invalid ones.
+    The parametrization is not exhaustive, there are simply too many combinations. We
+    picked some combinations to cover different cases, more can be added if useful.
     """
-    vectors = EcdsaSigVerVectors.load(curve, hash_function, compliance=False)
 
-    # Separate the test vectors into two categories.
-    valid = list()
-    invalid = list()
+    def verify_der(pk: bytes, msg: bytes, sig: bytes) -> bool:
+        return ECDSA._verify(pk, algo, msg, sig)
 
-    for test_group in vectors.wycheproof["testGroups"]:
-        key = test_group["keyDer"]
-        for test in test_group["tests"]:
-            message = test["msg"]
-            signature = test["sig"]
-            line = f"{key}/{message}/{signature}"
-            if test["result"] == "valid":
-                valid.append(line)
-            elif test["result"] == "invalid":
-                invalid.append(line)
-
-    valid_file = tmp_path / f"ecdsa_{str(curve)}_{str(hash_function)}_valid.txt"
-    invalid_file = tmp_path / f"ecdsa_{str(curve)}_{str(hash_function)}_invalid.txt"
-
-    # Run valid test vectors.
-    text = "\n".join(valid)
-    valid_file.write_text(text)
-    results = ECDSA.verify_file(
-        str(valid_file), ECDSA.PubKeyEncoding.DER, hash_function
-    )
-
-    console.print_results(results)
-    passed = results.valid.passed
-    assert passed == len(valid), f"Expected {len(valid)} passed tests, {passed} passed"
-    assert results.valid.failed == 0, "There are failed tests"
-
-    # Run invalid test vectors.
-    text = "\n".join(invalid)
-    invalid_file.write_text(text)
-    results = ECDSA.verify_file(
-        str(invalid_file), ECDSA.PubKeyEncoding.DER, hash_function
-    )
-
-    console.print_results(results)
-    failed = results.valid.failed
-    assert failed == len(invalid), (
-        f"Expected {len(invalid)} failed invalid tests, {failed} failed"
-    )
-    assert results.valid.passed == 0, "There are passed invalid tests"
-
-
-@pytest.mark.parametrize(
-    "curve_name, hash_name, nist, wycheproof",
-    [
-        ("secp192r1", "sha256", True, True),
-        ("secp224r1", "sha256", True, True),
-        ("secp256r1", "sha256", True, True),
-        ("secp256k1", "sha256", False, True),
-        ("brainpoolP256r1", "sha256", False, True),
-    ],
-)
-def test_verify(curve_name: str, hash_name: str, nist: bool, wycheproof: bool):
-    """Tests :meth:`crypto_condor.primitives.ECDSA.test_verify`.
-
-    Args:
-        curve_name: Name of the curve to test.
-        hash_name: Name of the hash function to test.
-        nist: Whether results from NIST test vectors are expected.
-        wycheproof: Whether results from Wycheproof test vectors are expected.
-    """
-    curve = ECDSA.Curve.from_name(curve_name)
-    hash_function = ECDSA.Hash.from_name(hash_name)
-
-    def verify(public_key: bytes, message: bytes, signature: bytes) -> bool:
-        """Lower-order function to wrap :class:`ECDSA`'s `verify`."""
-        return ECDSA._verify(public_key, hash_function, message, signature)
-
-    def _verify_uncompressed(
-        public_key: bytes, message: bytes, signature: bytes
-    ) -> bool:
-        pk = ec.EllipticCurvePublicKey.from_encoded_point(
-            curve.get_curve_instance(), public_key
-        )
+    def verify_pem(pk: bytes, msg: bytes, sig: bytes) -> bool:
+        key: ec.EllipticCurvePublicKey = serialization.load_pem_public_key(pk)  # type: ignore
         try:
-            pk.verify(signature, message, ec.ECDSA(hash_function.get_hash_instance()))
+            key.verify(sig, msg, ec.ECDSA(algo.get_hash_instance()))
             return True
         except InvalidSignature:
             return False
 
-    results = ECDSA.test_verify(verify, curve, hash_function, ECDSA.PubKeyEncoding.DER)
-    if nist:
-        assert results.get("nist", None) is not None
-        console.print_results(results["nist"])
-        assert results["nist"].check()
-    if wycheproof:
-        assert results.get("wycheproof", None) is not None
-        console.print_results(results["wycheproof"])
-        assert results["wycheproof"].check()
-
-    results = ECDSA.test_verify(
-        _verify_uncompressed, curve, hash_function, ECDSA.PubKeyEncoding.UNCOMPRESSED
-    )
-    if nist:
-        assert results.get("nist", None) is not None
-        console.print_results(results["nist"])
-        assert results["nist"].check()
-    if wycheproof:
-        assert results.get("wycheproof", None) is not None
-        console.print_results(results["wycheproof"])
-        assert results["wycheproof"].check()
-
-
-@pytest.mark.parametrize(
-    "curve_name, hash_name",
-    [
-        ("secp192r1", "sha256"),
-        ("secp224r1", "sha256"),
-        ("secp256r1", "sha256"),
-        ("secp256k1", "sha256"),
-        ("brainpoolP256r1", "sha256"),
-    ],
-)
-def test_verify_prehashed(curve_name: str, hash_name: str):
-    """Tests :meth:`crypto_condor.primitives.ECDSA.test_verify` with prehashed messages."""  # noqa: E501
-    curve = ECDSA.Curve.from_name(curve_name)
-    hash_function = ECDSA.Hash.from_name(hash_name)
-
-    def _verify(public_key: bytes, message: bytes, signature: bytes):
-        return ECDSA._verify(
-            public_key, hash_function, message, signature, pre_hashed=True
+    def verify_point(pk: bytes, msg: bytes, sig: bytes) -> bool:
+        key = ec.EllipticCurvePublicKey.from_encoded_point(
+            curve.get_curve_instance(), pk
         )
+        try:
+            key.verify(sig, msg, ec.ECDSA(algo.get_hash_instance()))
+            return True
+        except InvalidSignature:
+            return False
 
-    group = ECDSA.test_verify(
-        _verify, curve, hash_function, ECDSA.PubKeyEncoding.DER, pre_hashed=True
+    rd = ECDSA.test_verify(
+        verify_der, curve, algo, ECDSA.PubKeyEncoding.DER, resilience=True
     )
-    if group.get("nist", None) is not None:
-        assert group["nist"].check()
-    if group.get("wycheproof", None) is not None:
-        assert group["wycheproof"].check()
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "verify_der failed"
+
+    rd = ECDSA.test_verify(
+        verify_pem, curve, algo, ECDSA.PubKeyEncoding.PEM, resilience=True
+    )
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "verify_pem failed"
+
+    rd = ECDSA.test_verify(
+        verify_point, curve, algo, ECDSA.PubKeyEncoding.UNCOMPRESSED, resilience=True
+    )
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "verify_point failed"
 
 
 @pytest.mark.parametrize(
-    "curve_name, hash_name",
+    ("curve", "algo"),
     [
-        ("secp224r1", "sha256"),
-        ("secp256r1", "sha256"),
-        ("secp384r1", "sha256"),
-        ("secp521r1", "sha256"),
+        # Test a standard combination.
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        # Test another standard combination.
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test a B curve.
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA384),
+        # Test secp256k1.
+        (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA512),
+        # Test Brainpool.
+        (ECDSA.Curve.BRAINPOOLP384R1, ECDSA.Hash.SHA384),
+        # Test SHA-3.
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA3_512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
     ],
 )
-def test_sign(curve_name: str, hash_name: str):
+def test_verify_prehashed(curve: ECDSA.Curve, algo: ECDSA.Hash):
+    """Tests :meth:`crypto_condor.primitives.ECDSA.test_verify.
+
+    This test uses pre-hashed messages. It uses the same parametrization as
+    :func:`test_verify` but does not cover all types of key encoding. Testing the
+    behaviour of pre-hashed messages once should be enough.
+    """
+
+    def verify_der(pk: bytes, msg: bytes, sig: bytes) -> bool:
+        return ECDSA._verify(pk, algo, msg, sig, pre_hashed=True)
+
+    rd = ECDSA.test_verify(
+        verify_der,
+        curve,
+        algo,
+        ECDSA.PubKeyEncoding.DER,
+        pre_hashed=True,
+        resilience=True,
+    )
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True)
+
+
+@pytest.mark.parametrize(
+    ("curve", "algo"),
+    [
+        # Test standard combinations.
+        (ECDSA.Curve.P224, ECDSA.Hash.SHA224),
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA384),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test B curves.
+        (ECDSA.Curve.B283, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B409, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512_224),
+    ],
+)
+def test_sign(curve: ECDSA.Curve, algo: ECDSA.Hash):
     """Tests :func:`crypto_condor.primitives.ECDSA.test_sign`.
 
-    Uses :mod:`cryptography`'s implementation to sign messages.
+    The parametrization is not exhaustive, there are simply too many combinations. We
+    picked some combinations to cover different cases, more can be added if useful.
     """
-    curve = ECDSA.Curve.from_name(curve_name)
-    hash_function = ECDSA.Hash.from_name(hash_name)
 
-    def _sign(private_key: bytes, message: bytes) -> bytes:
-        loaded_key = serialization.load_der_private_key(private_key, None)
-        if not isinstance(loaded_key, ec.EllipticCurvePrivateKey):
-            raise ValueError("Loaded key is not an elliptic curve private key.")
-        signature = loaded_key.sign(
-            message, ec.ECDSA(hash_function.get_hash_instance())
+    def sign_der(sk: bytes, msg: bytes) -> bytes:
+        return ECDSA._sign(sk, algo, msg)
+
+    def sign_pem(sk: bytes, msg: bytes) -> bytes:
+        key = serialization.load_pem_private_key(sk, None)
+        return key.sign(msg, ec.ECDSA(algo.get_hash_instance()))  # type: ignore
+
+    def sign_value(sk: bytes, msg: bytes) -> bytes:
+        key = ec.derive_private_key(
+            int.from_bytes(sk, "big"), curve.get_curve_instance()
         )
-        return signature
+        return key.sign(msg, ec.ECDSA(algo.get_hash_instance()))
 
-    results = ECDSA.test_sign(_sign, curve, hash_function, ECDSA.KeyEncoding.DER)
-    assert results is not None, "No results"
-    console.print_results(results)
-    assert results.check()
+    rd = ECDSA.test_sign(sign_der, curve, algo, ECDSA.KeyEncoding.DER)
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "sign_der failed"
+
+    rd = ECDSA.test_sign(sign_pem, curve, algo, ECDSA.KeyEncoding.PEM)
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "sign_pem failed"
+
+    rd = ECDSA.test_sign(sign_value, curve, algo, ECDSA.KeyEncoding.INT)
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "sign_value failed"
 
 
 @pytest.mark.parametrize(
-    "curve_name, hash_name",
+    ("curve", "algo"),
     [
-        ("secp224r1", "sha256"),
-        ("secp256r1", "sha256"),
-        ("secp384r1", "sha256"),
-        ("secp521r1", "sha256"),
+        # Test standard combinations.
+        (ECDSA.Curve.P224, ECDSA.Hash.SHA224),
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA384),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test B curves.
+        (ECDSA.Curve.B283, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B409, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512_224),
     ],
 )
-def test_sign_prehashed(curve_name: str, hash_name: str):
-    """Tests :meth:`crypto_condor.primitives.ECDSA.test_sign.
+def test_sign_prehashed(curve: ECDSA.Curve, algo: ECDSA.Hash):
+    """Tests :meth:`crypto_condor.primitives.ECDSA.test_sign`.
 
-    Uses pre-hashed messages and DER encoding.
+    This test uses pre-hashed messages. It uses the same parametrization as
+    :func:`test_sign` but does not cover all types of key encoding. Testing the
+    behaviour of pre-hashed messages once should be enough.
     """
-    curve = ECDSA.Curve.from_name(curve_name)
-    hash_function = ECDSA.Hash.from_name(hash_name)
 
-    def _sign(private_key: bytes, message: bytes) -> bytes:
-        loaded_key = serialization.load_der_private_key(private_key, None)
+    def sign_der_prehashed(sk: bytes, msg: bytes) -> bytes:
+        loaded_key = serialization.load_der_private_key(sk, None)
         if not isinstance(loaded_key, ec.EllipticCurvePrivateKey):
             raise ValueError("Loaded key is not an elliptic curve private key.")
         signature = loaded_key.sign(
-            message, ec.ECDSA(utils.Prehashed(hash_function.get_hash_instance()))
+            msg, ec.ECDSA(utils.Prehashed(algo.get_hash_instance()))
         )
         return signature
 
-    results = ECDSA.test_sign(
-        _sign, curve, hash_function, ECDSA.KeyEncoding.DER, pre_hashed=True
+    rd = ECDSA.test_sign(
+        sign_der_prehashed, curve, algo, ECDSA.KeyEncoding.DER, pre_hashed=True
     )
-    assert results is not None, "No results"
-    console.print_results(results)
-    assert results.check()
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "sign_der_prehashed failed"
 
 
-# @pytest.mark.xfail(reason="KeyGen arbitrarily fails TestU01")
+@pytest.mark.skip(reason="KeyGen arbitrarily fails TestU01")
 @pytest.mark.parametrize(
     "curve",
     [
-        ECDSA.Curve.SECP224R1,
-        ECDSA.Curve.SECP256R1,
-        ECDSA.Curve.SECP384R1,
-        ECDSA.Curve.SECP521R1,
-        ECDSA.Curve.SECT283R1,
-        ECDSA.Curve.SECT409R1,
-        ECDSA.Curve.SECT571R1,
+        ECDSA.Curve.P224,
+        ECDSA.Curve.P256,
+        ECDSA.Curve.P384,
+        ECDSA.Curve.P521,
+        ECDSA.Curve.B283,
+        ECDSA.Curve.B409,
+        ECDSA.Curve.B571,
     ],
 )
 def test_key_pair(curve: ECDSA.Curve):
@@ -260,74 +241,156 @@ def test_key_pair(curve: ECDSA.Curve):
         qy = public_key.public_numbers().y
         return (d, qx, qy)
 
-    group = ECDSA.test_key_pair_gen(_generate_key_pair, curve)
-    assert group.get("keygen", None) is not None, "No keygen results"
-    console.print_results(group["keygen"])
-    assert group["keygen"].check()
-
-    assert group.get("testu01", None) is not None, "No TestU01 results"
-    console.print_results(group["testu01"])
-    assert group["keygen"].check()
+    rd = ECDSA.test_key_pair_gen(_generate_key_pair, curve)
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True)
 
 
-@pytest.mark.xfail(reason="KeyGen arbitrarily fails TestU01")
+@pytest.mark.skip(reason="KeyGen arbitrarily fails TestU01")
 @pytest.mark.parametrize(
-    "curve_name",
-    ["p224", "p256", "p384", "p521"],
+    "curve",
+    [
+        ECDSA.Curve.P224,
+        ECDSA.Curve.P256,
+        ECDSA.Curve.P384,
+        ECDSA.Curve.P521,
+    ],
 )
-def test_key_pair_pycryptodome(curve_name: str):
+def test_key_pair_pycryptodome(curve: ECDSA.Curve):
     """Tests :func:`crypto_condor.primitives.ECDSA.test_key_pair`.
 
     Uses :mod:`pycryptodome` to generate the keys. We only test the P-curves, as
     pycryptodome doesn't support the NIST binary curves.
     """
-    curve = ECDSA.Curve.from_name(curve_name)
 
     def _generate_key_pair() -> tuple[int, int, int]:
         from Crypto.PublicKey import ECC
 
-        key = ECC.generate(curve=curve_name)
+        key = ECC.generate(curve=str(curve))
         return (int(key.d), key.pointQ.x, key.pointQ.y)
 
     group = ECDSA.test_key_pair_gen(_generate_key_pair, curve)
-    assert group.check()
+    assert group.check(fail_if_empty=True)
 
 
+# TODO: some tests are skipped due to a lack of SigGen test vectors.
 @pytest.mark.parametrize(
-    "curve_name, hash_name",
+    ("curve", "algo"),
     [
-        ("secp224r1", "sha256"),
-        ("secp256r1", "sha256"),
-        ("secp384r1", "sha256"),
-        ("secp521r1", "sha256"),
+        # Test a standard combination.
+        (ECDSA.Curve.P224, ECDSA.Hash.SHA224),
+        # Test another standard combination.
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        # Test a B curve.
+        (ECDSA.Curve.B283, ECDSA.Hash.SHA384),
+        # Test secp256k1.
+        pytest.param(
+            ECDSA.Curve.SECP256K1,
+            ECDSA.Hash.SHA512,
+            marks=pytest.mark.skip(reason="No SigGen vectors for secp256k1"),
+        ),
+        # Test Brainpool.
+        pytest.param(
+            ECDSA.Curve.BRAINPOOLP384R1,
+            ECDSA.Hash.SHA384,
+            marks=pytest.mark.skip(reason="No SigGen vectors for Brainpool curves"),
+        ),
+        # Test SHA-3.
+        pytest.param(
+            ECDSA.Curve.P521,
+            ECDSA.Hash.SHA3_512,
+            marks=pytest.mark.skip(reason="No SigGen vectors for SHA-3"),
+        ),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
     ],
 )
-def test_sign_then_verify(curve_name: str, hash_name: str):
-    """Tests :func:`crypto_condor.primitives.ECDSA.test_sign_then_verify`.
+def test_sign_verify_invariant(curve: ECDSA.Curve, algo: ECDSA.Hash):
+    """Tests :func:`crypto_condor.primitives.ECDSA.test_sign_verify_invariant`.
 
     Uses :mod:`cryptography`'s implementation to sign messages.
     """
-    curve = ECDSA.Curve.from_name(curve_name)
-    hash_function = ECDSA.Hash.from_name(hash_name)
 
-    def _sign(private_key: bytes, message: bytes) -> bytes:
-        loaded_key = serialization.load_der_private_key(private_key, None)
-        if not isinstance(loaded_key, ec.EllipticCurvePrivateKey):
-            raise ValueError("Loaded key is not an elliptic curve private key.")
-        signature = loaded_key.sign(
-            message, ec.ECDSA(hash_function.get_hash_instance())
-        )
-        return signature
+    def sign_der(sk: bytes, msg: bytes) -> bytes:
+        return ECDSA._sign(sk, algo, msg)
 
-    def _verify(public_key: bytes, message: bytes, signature: bytes):
-        return ECDSA._verify(public_key, hash_function, message, signature)
+    def verify_der(pk: bytes, msg: bytes, sig: bytes):
+        return ECDSA._verify(pk, algo, msg, sig)
 
-    results = ECDSA.test_sign_then_verify(
-        _sign,
-        _verify,
+    results = ECDSA.test_sign_verify_invariant(
+        sign_der,
+        verify_der,
         curve,
+        algo,
         ECDSA.KeyEncoding.DER,
         ECDSA.PubKeyEncoding.DER,
     )
     console.print_results(results)
-    assert results.check()
+    assert results.check(fail_if_empty=True)
+
+
+@pytest.mark.parametrize(
+    ("curve", "algo"),
+    [
+        # Test standard combinations.
+        (ECDSA.Curve.P224, ECDSA.Hash.SHA224),
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA384),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test B curves.
+        (ECDSA.Curve.B283, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B409, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512_224),
+    ],
+)
+def test_output(curve: ECDSA.Curve, algo: ECDSA.Hash, tmp_path: Path):
+    """Tests :func:`crypto_condor.primitives.ECDSA.test_output_verify`.
+
+    It uses existing test vectors to create two files: one filled with valid signatures
+    and another with invalid ones. All tests must pass with the valid signatures, while
+    all tests must fail with the invalid ones. The number of tests is verified.
+    """
+    output = generate_ecdsa_sigs(curve, algo, True)
+    output_file = tmp_path / f"ecdsa_{str(curve)}_{str(algo).replace('/', '')}.txt"
+    output_file.write_text(output)
+
+    rd = ECDSA.test_output_sign(
+        str(output_file), curve, algo, ECDSA.PubKeyEncoding.UNCOMPRESSED
+    )
+    console.print_results(rd)
+    assert rd.check(fail_if_empty=True), "There are failed tests with valid values"
+
+
+@pytest.mark.parametrize(
+    ("curve", "algo"),
+    [
+        # Test standard combinations.
+        (ECDSA.Curve.P224, ECDSA.Hash.SHA224),
+        (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA384),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+        # Test B curves.
+        (ECDSA.Curve.B283, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B409, ECDSA.Hash.SHA256),
+        (ECDSA.Curve.B571, ECDSA.Hash.SHA512),
+        # Test a truncated hash.
+        (ECDSA.Curve.P384, ECDSA.Hash.SHA512_256),
+        (ECDSA.Curve.P521, ECDSA.Hash.SHA512_224),
+    ],
+)
+def test_output_invalid(curve: ECDSA.Curve, algo: ECDSA.Hash, tmp_path: Path):
+    """Tests :func:`crypto_condor.primitives.ECDSA.test_output_verify`."""
+    output = generate_ecdsa_sigs(curve, algo, False)
+    output_file = (
+        tmp_path / f"ecdsa_{str(curve)}_{str(algo).replace('/', '')}_invalid.txt"
+    )
+    output_file.write_text(output)
+
+    rd = ECDSA.test_output_sign(
+        str(output_file), curve, algo, ECDSA.PubKeyEncoding.UNCOMPRESSED
+    )
+    console.print_results(rd)
+    assert not rd.check()

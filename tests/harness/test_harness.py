@@ -38,6 +38,7 @@ ROOT_DIR = Path("tests/harness")
         "chacha20_poly1305_openssl_decrypt",
         "ECDH_point",
         "ECDH_x509",
+        "ECDSA",
         "HMAC_digest",
         "HMAC_verify",
         "MLDSA",

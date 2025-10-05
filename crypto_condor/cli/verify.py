@@ -140,12 +140,19 @@ def aes(
 
 _ecdsa_help = """Verify ECDSA signatures.
 
-The format is a work in progress, so it is subject to change.
+Format:
 
-- One line per signature.
-- All arguments are given in hexadecimal.
-- Arguments are separated by slashes.
-- The order is important. The arguments are interpreted as: key, message, and signature.
+    - One set of arguments per line.
+    - Lines are separated by newlines (``\n``).
+    - Lines that start with '#' are counted as comments and ignored.
+    - Arguments are written in hexadecimal and separated by slashes.
+    - The keys may be different for each line but they must be encoded in the same
+      format.
+    - The order of the arguments is:
+
+    .. code::
+
+        pub_key/message/signature
 """
 
 
@@ -180,24 +187,45 @@ def ecdsa(
             show_default=False,
         ),
     ],
+    curve: Annotated[
+        Optional[ECDSA.Curve],
+        typer.Argument(
+            help=(
+                "The elliptic curve used, "
+                "this is required for UNCOMPRESSED key encoding"
+            ),
+            show_default=False,
+        ),
+    ] = None,
     filename: Annotated[str, _filename] = "",
     no_save: Annotated[bool, _no_save] = False,
+    debug: Annotated[Optional[bool], _debug] = None,
 ):
     """Tests ECDSA signatures.
 
     Args:
-        input_file: The input file to read and parse.
-        pubkey_encoding: The encoding used for the public keys.
-        hash_function: The hash function used to generate the signatures.
-        filename: Name of the file to save results.
-        no_save: Do not save results or prompt the user.
+        input_file:
+            The input file to read and parse.
+        pubkey_encoding:
+            The encoding used for the public keys.
+        hash_function:
+            The hash function used to generate the signatures.
+        curve:
+            The curve to use for public keys encoded as uncompressed points.
+
+    Keyword Args:
+        filename:
+            Name of the file to save results.
+        no_save:
+            Do not save results or prompt the user.
+        debug:
+            Whether to saving debug data.
     """
-    try:
-        results = ECDSA.verify_file(str(input_file), pubkey_encoding, hash_function)
-    except (ValueError, IOError) as error:
-        console.print(str(error))
-        raise typer.Exit(1) from error
-    if console.process_results(results, filename, no_save):
+    results = ECDSA.test_output_sign(
+        str(input_file), curve, hash_function, pubkey_encoding
+    )
+
+    if console.process_results(results, filename, no_save, debug):
         raise typer.Exit(0)
     else:
         raise typer.Exit(1)

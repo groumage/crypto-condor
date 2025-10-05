@@ -16,6 +16,7 @@ from crypto_condor.constants import SUPPORTED_MODES, Primitive
 from crypto_condor.primitives import AES, ECDH, ECDSA, HMAC, SHA, ChaCha20
 
 from ..utils.ecdh import generate_ecdh_output
+from ..utils.ecdsa import generate_ecdsa_sigs
 from ..utils.hmac import generate_hmac_output
 
 runner = CliRunner()
@@ -303,125 +304,69 @@ class TestVerifyAes:
 class TestEcdsa:
     """Class to group tests of the verify command with ECDSA."""
 
-    @staticmethod
-    def format_wycheproof(
-        curve: ECDSA.Curve,
-        hash_function: ECDSA.Hash,
-        out: Path,
-        valid: bool,
-    ) -> int:
-        """Formats Wycheproof test vectors for testing.
-
-        It uses the format expected by
-        :class:`~crypto_condor.primitives.ECDSA.verify_file`.
-
-        Args:
-            curve:
-                The elliptic curve to use.
-            hash_function:
-                The hash function to use.
-            out:
-                The file to which the formatted data is written to.
-            valid:
-                If True, only valid tests are used. Otherwise only invalid tests are
-                used.
-
-        Returns:
-            The number of tests written.
-
-        Note:
-            It currently skips "acceptable" tests.
-        """
-        vectors = ECDSA.EcdsaSigVerVectors.load(curve, hash_function, compliance=False)
-        if vectors.wycheproof is None:
-            return 0
-
-        selected_vectors = list()
-
-        for test_group in vectors.wycheproof["testGroups"]:
-            key = test_group["keyDer"]
-            for test in test_group["tests"]:
-                if test["result"] == "acceptable":
-                    continue
-                if valid and test["result"] == "invalid":
-                    continue
-                if not valid and test["result"] == "valid":
-                    continue
-                message = test["msg"]
-                signature = test["sig"]
-                selected_vectors.append(f"{key}/{message}/{signature}")
-
-        text = "\n".join(selected_vectors)
-        try:
-            with out.open("w") as file:
-                file.write(text)
-        except IOError:
-            return 0
-
-        return len(selected_vectors)
-
-    # TODO: add parameters
     @pytest.mark.parametrize(
-        "curve,hash_function",
+        "curve,algo",
         [
-            (ECDSA.Curve.SECP192R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256R1, ECDSA.Hash.SHA_256),
+            (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+            (ECDSA.Curve.P256, ECDSA.Hash.SHA384),
+            (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+            (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA256),
         ],
     )
-    def test_correct_implementation(
-        self, curve: ECDSA.Curve, hash_function: ECDSA.Hash, tmp_path: Path
-    ):
+    def test_output(self, curve: ECDSA.Curve, algo: ECDSA.Hash, tmp_path: Path):
         """Tests the output of a correct implementation of ECDSA."""
-        out = tmp_path / "verify_ok.txt"
-        number_tests = self.format_wycheproof(curve, hash_function, out, True)
-        assert number_tests > 0, "Verify data was not generated"
+        output = generate_ecdsa_sigs(curve, algo, True)
+        output_file = tmp_path / f"ecdsa_{str(curve)}_{str(algo).replace('/', '')}.txt"
+        output_file.write_text(output)
 
-        result = runner.invoke(
+        res = runner.invoke(
             app,
             [
                 "test",
                 "output",
-                "ECDSA",
-                str(out),
-                "DER",
-                str(hash_function),
+                "ecdsa",
+                str(output_file.absolute()),
+                "UNCOMPRESSED",
+                str(algo),
+                str(curve),
                 "--no-save",
             ],
         )
-        print(result.output)
-        assert result.exit_code == 0
-        assert str(number_tests) in result.stdout
+        print(res.output)
+        assert res.exit_code == 0
 
-    # TODO: add parameters
     @pytest.mark.parametrize(
-        "curve,hash_function",
+        "curve,algo",
         [
-            (ECDSA.Curve.SECP192R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256R1, ECDSA.Hash.SHA_256),
+            (ECDSA.Curve.P256, ECDSA.Hash.SHA256),
+            (ECDSA.Curve.P256, ECDSA.Hash.SHA384),
+            (ECDSA.Curve.P521, ECDSA.Hash.SHA512),
+            (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA256),
         ],
     )
-    def test_faulty_implementation(
-        self, curve: ECDSA.Curve, hash_function: ECDSA.Hash, tmp_path: Path
-    ):
-        """Tests the output of a faulty implementation of ECDSA."""
-        out = tmp_path / "verify_fail.txt"
-        number_tests = self.format_wycheproof(curve, hash_function, out, False)
-        assert number_tests > 0, "Verify data was not generated"
+    def test_output_invalid(self, curve: ECDSA.Curve, algo: ECDSA.Hash, tmp_path: Path):
+        """Tests the output of an invalid implementation of ECDSA."""
+        output = generate_ecdsa_sigs(curve, algo, False)
+        output_file = (
+            tmp_path / f"ecdsa_{str(curve)}_{str(algo).replace('/', '')}_invalid.txt"
+        )
+        output_file.write_text(output)
 
-        result = runner.invoke(
+        res = runner.invoke(
             app,
             [
                 "test",
                 "output",
-                "ECDSA",
-                str(out),
-                "DER",
-                str(hash_function),
+                "ecdsa",
+                str(output_file.absolute()),
+                "UNCOMPRESSED",
+                str(algo),
+                str(curve),
                 "--no-save",
             ],
         )
-        assert result.exit_code != 0
-        assert str(number_tests) in result.stdout
+        print(res.output)
+        assert res.exit_code != 0
 
 
 class TestSha:

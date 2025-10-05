@@ -8,7 +8,6 @@ from typer.testing import CliRunner
 
 from crypto_condor.cli.main import app
 from crypto_condor.constants import SUPPORTED_MODES, Primitive
-from crypto_condor.primitives import ECDSA
 
 runner = CliRunner()
 
@@ -67,40 +66,10 @@ class TestChaCha20:
 class TestEcdsa:
     """Tests ECDSA wrappers."""
 
-    @pytest.mark.skip(reason="PyCryptodome fails some tests")
-    @pytest.mark.parametrize(
-        "curve,hash_function",
-        [
-            pytest.param(
-                ECDSA.Curve.SECP256R1,
-                ECDSA.Hash.SHA_256,
-                marks=pytest.mark.xfail(reason="PyCryptodome fails 1 Wycheproof test"),
-            ),
-            pytest.param(
-                ECDSA.Curve.SECP192R1,
-                ECDSA.Hash.SHA_256,
-                marks=pytest.mark.xfail(reason="PyCryptodome fails 1 Wycheproof test"),
-            ),
-            pytest.param(
-                ECDSA.Curve.SECP224R1,
-                ECDSA.Hash.SHA_256,
-                marks=pytest.mark.xfail(reason="PyCryptodome fails 1 Wycheproof test"),
-            ),
-            pytest.param(
-                ECDSA.Curve.SECP384R1,
-                ECDSA.Hash.SHA_256,
-            ),
-        ],
-    )
-    def test_pycryptodome_example(
-        self,
-        curve: ECDSA.Curve,
-        hash_function: ECDSA.Hash,
-        tmp_path: Path,
-    ):
-        """Tests the ECDSA PyCryptodome wrapper examples."""
-        with runner.isolated_filesystem(tmp_path):
-            result = runner.invoke(
+    def test_cryptography_example(self):
+        """Tests the ECDSA cryptography wrapper examples."""
+        with runner.isolated_filesystem():
+            wrap_result = runner.invoke(
                 app,
                 [
                     "get-wrapper",
@@ -112,132 +81,9 @@ class TestEcdsa:
                     "--force",
                 ],
             )
-            if result.exit_code != 0:
-                warnings.warn("Could not get wrapper example", stacklevel=0)
-                return
-
-            args = [
-                "test",
-                "wrapper",
-                "ECDSA",
-                "-l",
-                "python",
-                "--curve",
-                str(curve),
-                "--hash",
-                str(hash_function),
-                "--key-encoding",
-                ECDSA.KeyEncoding.DER,
-                "--pubkey-encoding",
-                ECDSA.PubKeyEncoding.DER,
-                "--no-save",
-            ]
-
-            result = runner.invoke(app, args)
-            print(result.output)
-            assert "large x-coordinate" in result.output
-            assert result.exit_code == 0
-
-    @pytest.mark.parametrize(
-        "curve,hash_function",
-        [
-            (ECDSA.Curve.SECP192R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP224R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP384R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.BRAINPOOLP256R1, ECDSA.Hash.SHA_256),
-        ],
-    )
-    def test_cryptography_example(
-        self,
-        curve: ECDSA.Curve,
-        hash_function: ECDSA.Hash,
-    ):
-        """Tests the ECDSA cryptography wrapper examples."""
-        with runner.isolated_filesystem():
-            wrap_result = runner.invoke(
-                app,
-                [
-                    "get-wrapper",
-                    "ECDSA",
-                    "--language",
-                    ECDSA.Wrapper.PYTHON,
-                    "--example",
-                    "2",
-                    "--force",
-                ],
-            )
             assert wrap_result.exit_code == 0, "Could not get wrapper"
 
-            args = [
-                "test",
-                "wrapper",
-                "ECDSA",
-                ECDSA.Wrapper.PYTHON,
-                curve,
-                hash_function,
-                "--key-encoding",
-                ECDSA.KeyEncoding.DER,
-                "--pubkey-encoding",
-                ECDSA.PubKeyEncoding.DER,
-                "--no-save",
-            ]
-
-            result = runner.invoke(app, args)
-            print(result.output)
-            assert result.exit_code == 0
-
-    @pytest.mark.parametrize(
-        "curve,hash_function",
-        [
-            (ECDSA.Curve.SECP192R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP224R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP256K1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.SECP384R1, ECDSA.Hash.SHA_256),
-            (ECDSA.Curve.BRAINPOOLP256R1, ECDSA.Hash.SHA_256),
-        ],
-    )
-    def test_cryptography_example_sign_then_verify(
-        self,
-        curve: ECDSA.Curve,
-        hash_function: ECDSA.Hash,
-    ):
-        """Tests the sign-then-verify using the cryptography wrapper."""
-        with runner.isolated_filesystem():
-            wrap_result = runner.invoke(
-                app,
-                [
-                    "get-wrapper",
-                    "ECDSA",
-                    "--language",
-                    ECDSA.Wrapper.PYTHON,
-                    "--example",
-                    "2",
-                    "--force",
-                ],
-            )
-            if wrap_result.exit_code != 0:
-                warnings.warn("Could not get wrapper example", stacklevel=0)
-                return
-
-            args = [
-                "test",
-                "wrapper",
-                "ECDSA",
-                ECDSA.Wrapper.PYTHON,
-                curve,
-                hash_function,
-                "--no-sign",
-                "--no-verify",
-                "--sign-then-verify",
-                "--key-encoding",
-                ECDSA.KeyEncoding.DER,
-                "--pubkey-encoding",
-                ECDSA.PubKeyEncoding.DER,
-                "--no-save",
-            ]
+            args = ["test", "wrapper", "ECDSA", "ecdsa_wrapper_example.py", "--no-save"]
 
             result = runner.invoke(app, args)
             print(result.output)

@@ -26,7 +26,7 @@ $(VERSIONS):
 	@echo "[docs] Building docs for $@"
 	latest_tag="$(shell git describe --tags --abbrev=0 --exclude='*rc[0-9]')";\
 	latest_commit="$(shell git rev-parse --short HEAD)";\
-	git checkout $@;\
+	git checkout -f $@;\
 	$(SPHINXBUILD) "$(SOURCEDIR)" "$(BUILDDIR)/public/$@" -A latest_tag=$$latest_tag -A latest_commit=$$latest_commit -A versions="$(VERSIONS)"
 
 # Catch-all target: route all unknown targets to Sphinx using the new

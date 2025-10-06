@@ -57,7 +57,7 @@ def list_functions(
     for name in set(
         [
             func.name
-            for func in lief_lib.exported_functions
+            for func in lief_lib.exported_functions  # type: ignore
             if isinstance(func.name, str)
         ]
     ):

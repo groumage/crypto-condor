@@ -149,14 +149,14 @@
       "SHA-512/256": [
         "cavp-sigver-P-224-SHA-512_256.pb2"
       ],
+      "SHA3-224": [
+        "wycheproof-sigver-P-224-SHA3-224.pb2"
+      ],
       "SHA3-256": [
         "wycheproof-sigver-P-224-SHA3-256.pb2"
       ],
       "SHA3-512": [
         "wycheproof-sigver-P-224-SHA3-512.pb2"
-      ],
-      "SHA3-224": [
-        "wycheproof-sigver-P-224-SHA3-224.pb2"
       ]
     },
     "P-256": {
@@ -304,6 +304,16 @@
         "wycheproof-sigver-brainpoolP256r1-SHA-256.pb2"
       ]
     },
+    "brainpoolP384r1": {
+      "SHA-384": [
+        "wycheproof-sigver-brainpoolP384r1-SHA-384.pb2"
+      ]
+    },
+    "brainpoolP512r1": {
+      "SHA-512": [
+        "wycheproof-sigver-brainpoolP512r1-SHA-512.pb2"
+      ]
+    },
     "secp256k1": {
       "SHA-256": [
         "wycheproof-sigver-secp256k1-SHA-256.pb2"
@@ -316,16 +326,6 @@
       ],
       "SHA-512": [
         "wycheproof-sigver-secp256k1-SHA-512.pb2"
-      ]
-    },
-    "brainpoolP384r1": {
-      "SHA-384": [
-        "wycheproof-sigver-brainpoolP384r1-SHA-384.pb2"
-      ]
-    },
-    "brainpoolP512r1": {
-      "SHA-512": [
-        "wycheproof-sigver-brainpoolP512r1-SHA-512.pb2"
       ]
     }
   }

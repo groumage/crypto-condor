@@ -36,7 +36,7 @@ def test_unsupported_primitives(primitive: str):
     """Tests calling verify on an unsupported primitive."""
     result = runner.invoke(app, ["test", "output", primitive])
     assert result.exit_code != 0
-    assert primitive in result.stdout
+    assert str(primitive) in result.stderr
 
 
 class TestVerifyAes:

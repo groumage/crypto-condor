@@ -13,7 +13,6 @@ from typing import Protocol, TypeAlias
 
 import attrs
 import cffi
-import enum_tools
 import strenum
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
@@ -100,7 +99,7 @@ class VectorType(strenum.StrEnum):
     """Vectors to test a function that generates signatures."""
 
 
-@enum_tools.documentation.document_enum
+# TODO: document member docstrings.
 class KeyEncoding(strenum.StrEnum):
     """Supported key encodings."""
 
@@ -112,7 +111,7 @@ class KeyEncoding(strenum.StrEnum):
     """The secret value, serialized to bytes."""
 
 
-@enum_tools.documentation.document_enum
+# TODO: document member docstrings.
 class PubKeyEncoding(strenum.StrEnum):
     """Supported public key encodings."""
 
